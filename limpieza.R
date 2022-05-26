@@ -102,11 +102,12 @@ summary(regresion1)
 regresion2 <- lm(Y ~ B + C + D + E + F + H, data=muestreo)
 summary(regresion2)
 
-#Regresión con las variables más correlacionadas al porcentaje de defectos.
-regresion3 <- lm(Y ~ B + C + E + F + G, data=muestreo)
+#Regresión con las variables que tiene un valor p < 0.05
+regresion3 <- lm(Y ~ B + C + D + E + F, data=muestreo)
 summary(regresion3)
 
-
+plot(TempPlastico4Mezcladora, PorcentajeDefectos)
+abline(regresionSimple, col = "red")
 
 # Modelo de predicción
 
