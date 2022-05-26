@@ -68,6 +68,13 @@ multi.hist(x = muestreo, dcol = c("blue", "red"),
 # Correlograma
 corrplot(cor(datos))
 
+# Gráficas ggpairs
+ggpairs(datos)
+#ggpairs(datos, upper = list(coninuous = "smooth"),
+#        lower = list(continuous = "blank"),
+#        diag = list(continuous = "densityDiag"))
+
+
 #Al ver el correlograma, vimos que la velocidad de extrusión
 # y la Presión de la bomba están relacionadas.
 plot(PresionBomba, VelocidadExtrusion, main="Gráfica Presión de la Bomba \n v.s. Velocidad de extrusión", xlab="Presión de la Bomba [Bar]", ylab="Velocidad Extrusión [m/s]")
@@ -76,12 +83,10 @@ plot(TempPlastico3Bomba, PorcentajeDefectos, main="Gráfica de Temperatura de Pl
 plot(TempBarril, PorcentajeDefectos, main="Gráfica de Temperatura del Barril \n v.s. Porcentaje de Defectos", xlab="Temperatura del Barril [°C]", ylab="Defectos [%]")
 
 
-# Gráficas ggpairs
-ggpairs(datos)
-#ggpairs(datos, upper = list(coninuous = "smooth"),
-#        lower = list(continuous = "blank"),
-#        diag = list(continuous = "densityDiag"))
 
+#Regresión lineal simple con una de las variables con más correlación
+regresionSimple <- lm(Y ~ C, data=muestreo)
+summary(regresionSimple)
 
 # Regresión lineal inicial
 
@@ -97,7 +102,7 @@ summary(regresion1)
 regresion2 <- lm(Y ~ B + C + D + E + F + H, data=muestreo)
 summary(regresion2)
 
-#Regresión con las variables más relacionadas al porcentaje de defectos.
+#Regresión con las variables más correlacionadas al porcentaje de defectos.
 regresion3 <- lm(Y ~ B + C + E + F + G, data=muestreo)
 summary(regresion3)
 
@@ -107,3 +112,4 @@ summary(regresion3)
 
 datos_nuevos <- data.frame(A=73,B=213,C=220,D=195,E=110,F=130,G=4.5,H=70,I=2)
 predict(regresion1, datos_nuevos)
+
