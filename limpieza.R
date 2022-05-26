@@ -29,18 +29,36 @@ resumen <- summary(muestreo)
 colnames <- names(muestreo)
 num_datos <- nrow(muestreo)
 
+#Cambio de nombre a las variabkes
+attach(muestreo)
+#        NUEVO                 # ANTERIOR
+datos<- rename(muestreo, PresionBomba = A,
+                TempPlastico3Bomba  = B,
+                TempPlastico4Mezcladora = C,
+                TempTornilloUsillo = D,
+                RpmTornilloUsillo = E,
+                TempBarril = F,
+                VelocidadExtrusion = G,
+                TempEnfriadores = H,
+                TipoMateria = I,
+                PorcentajeDefectos = Y
+               )
+
+names(datos)
+attach(datos)
+
 
 # Graficar cada variable respecto al porcentaje de error
 
-plot(muestreo$A, muestreo$Y, main="Gráfica presión v.s. porcentaje de defectos", xlab="Presión", ylab="Defectos %")
-plot(muestreo$B, muestreo$Y, main="Gráfica temp plástico 3 v.s. porcentaje de defectos", xlab="Temp plástico 3", ylab="Defectos %")
-plot(muestreo$C, muestreo$Y, main="Gráfica temp plástico 4 v.s. porcentaje de defectos", xlab="Temp plástico 4", ylab="Defectos %")
-plot(muestreo$D, muestreo$Y, main="Gráfica temp tornillo v.s. porcentaje de defectos", xlab="Temp tornillo", ylab="Defectos %")
-plot(muestreo$E, muestreo$Y, main="Gráfica RPM v.s. porcentaje de defectos", xlab="RPM", ylab="Defectos %")
-plot(muestreo$F, muestreo$Y, main="Gráfica temp barril v.s. porcentaje de defectos", xlab="Temp barril", ylab="Defectos %")
-plot(muestreo$G, muestreo$Y, main="Gráfica velocidad v.s. porcentaje de defectos", xlab="Velocidad", ylab="Defectos %")
-plot(muestreo$H, muestreo$Y, main="Gráfica temp enfriadores v.s. porcentaje de defectos", xlab="Temp enfriadores", ylab="Defectos %")
-plot(muestreo$I, muestreo$Y, main="Gráfica materia prima v.s. porcentaje de defectos", xlab="Materia prima", ylab="Defectos %")
+plot(A, Y, main="Gráfica presión v.s. porcentaje de defectos", xlab="Presión", ylab="Defectos %")
+plot(B, Y, main="Gráfica temp plástico 3 v.s. porcentaje de defectos", xlab="Temp plástico 3", ylab="Defectos %")
+plot(C, Y, main="Gráfica temp plástico 4 v.s. porcentaje de defectos", xlab="Temp plástico 4", ylab="Defectos %")
+plot(D, Y, main="Gráfica temp tornillo v.s. porcentaje de defectos", xlab="Temp tornillo", ylab="Defectos %")
+plot(E, Y, main="Gráfica RPM v.s. porcentaje de defectos", xlab="RPM", ylab="Defectos %")
+plot(F, Y, main="Gráfica temp barril v.s. porcentaje de defectos", xlab="Temp barril", ylab="Defectos %")
+plot(G, Y, main="Gráfica velocidad v.s. porcentaje de defectos", xlab="Velocidad", ylab="Defectos %")
+plot(H, Y, main="Gráfica temp enfriadores v.s. porcentaje de defectos", xlab="Temp enfriadores", ylab="Defectos %")
+plot(I, Y, main="Gráfica materia prima v.s. porcentaje de defectos", xlab="Materia prima", ylab="Defectos %")
 
 # Gráficas múltiples
 multi.hist(x = muestreo, dcol = c("blue", "red"),
@@ -48,13 +66,13 @@ multi.hist(x = muestreo, dcol = c("blue", "red"),
            main = c("A", "B", "C", "D", "E", "F", "G", "H", "I", "Y"))
 
 # Gráfica correlación
-corrplot(cor(muestreo))
+corrplot(cor(datos))
 
 # Gráficas ggpairs
-ggpairs(muestreo)
-ggpairs(muestreo, upper = list(coninuous = "smooth"),
-        lower = list(continuous = "blank"),
-        diag = list(continuous = "densityDiag"))
+ggpairs(datos)
+#ggpairs(datos, upper = list(coninuous = "smooth"),
+#        lower = list(continuous = "blank"),
+#        diag = list(continuous = "densityDiag"))
 
 # Regresión lineal inicial
 
