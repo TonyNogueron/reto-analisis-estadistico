@@ -1,0 +1,167 @@
+---
+  title: "Analisis"
+author: "Paulina Galindo, Antonio Noguerón, Pamela Ruíz"
+date: "6/1/2022"
+output: html_document
+---
+  
+  ```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(tidyr)
+library(readr)
+library(skimr)
+library(readxl)
+library(ggplot2)
+library(corrplot)
+library(GGally)
+library(psych)
+historico <- read_excel("Datos_Situacion_Problema.xlsx", sheet="Histórico de defectos")
+muestreo <- read_excel("Datos_Situacion_Problema.xlsx", sheet="Datos de muestreo", skip=1)
+indice <- read_excel("Datos_Situacion_Problema.xlsx", sheet="Índice")
+
+head(muestreo)
+str(muestreo)
+resumen <- summary(muestreo)
+colnames <- names(muestreo)
+num_datos <- nrow(muestreo)
+```
+
+# Introducción a la situación problema
+
+Usted trabaja en una empresa que se dedica a la producción de piezas automotrices a base de Polipropileno. Debido a cuestiones personales, el técnico experto en el proceso de extrusión salió de la empresa y el porcentaje de defectos está por los cielos.
+
+Es necesario determinar las variables importantes para el proceso de extrusión de Polipropileno en una máquina de tornillo sencillo para poder mejorar la producción. Es de particular interés el porcentaje de producto defectuoso. Cada producto es inspeccionado visualmente por personal del departamento de calidad. Para esto, cada cierto tiempo se toman muestras de producto final y se determina si éste tiene algún defecto. Una vez inspeccionado cada producto, se clasifica como defectuoso o no defectuoso y se calcula un cociente entre los defectuosos y el total producido para determinar el porcentaje de producto defectuoso.
+
+La máquina de extrusión que se utiliza en el proceso es una Welex y de acuerdo con su información técnica, hay *9 variables que podrían afectar la calidad del producto*, tal y como se muestra en la tabla siguiente:
+  
+  | FACTOR | NOMBRE DE LA VARIABLE |
+  | :----: | :----: |
+  |A|Presión bomba|
+  |B|Temperatura plástico 3(bomba)|
+  |C|Temperatura plástico 4(mezcladora)|
+  |D|Temperatura tornillo (usillo)|
+  |E|RPM tornillo (usillo)|
+  |F|Temperatura barril|
+  |G|Velocidad extrusión|
+  |H|Temperatura enfriadores|
+  |I|Tipo materia prima|
+  
+  ## Para empezar nuestro análisis renombramos las variables
+  ```{r}
+attach(muestreo)
+#        NUEVO                 # ANTERIOR
+datos<- rename(muestreo, PresionBomba = A,
+               TempPlastico3Bomba  = B,
+               TempPlastico4Mezcladora = C,
+               TempTornilloUsillo = D,
+               RpmTornilloUsillo = E,
+               TempBarril = F,
+               VelocidadExtrusion = G,
+               TempEnfriadores = H,
+               TipoMateria = I,
+               PorcentajeDefectos = Y
+)
+
+names(datos)
+attach(datos)
+
+```
+## Seguido de esto graficamos cada variable respecto al porcentaje de error
+```{r}
+plot(A, Y, main="Gráfica presión v.s. porcentaje de defectos", xlab="Presión", ylab="Defectos %")
+plot(B, Y, main="Gráfica temp plástico 3 v.s. porcentaje de defectos", xlab="Temp plástico 3", ylab="Defectos %")
+plot(C, Y, main="Gráfica temp plástico 4 v.s. porcentaje de defectos", xlab="Temp plástico 4", ylab="Defectos %")
+plot(D, Y, main="Gráfica temp tornillo v.s. porcentaje de defectos", xlab="Temp tornillo", ylab="Defectos %")
+plot(E, Y, main="Gráfica RPM v.s. porcentaje de defectos", xlab="RPM", ylab="Defectos %")
+plot(F, Y, main="Gráfica temp barril v.s. porcentaje de defectos", xlab="Temp barril", ylab="Defectos %")
+plot(G, Y, main="Gráfica velocidad v.s. porcentaje de defectos", xlab="Velocidad", ylab="Defectos %")
+plot(H, Y, main="Gráfica temp enfriadores v.s. porcentaje de defectos", xlab="Temp enfriadores", ylab="Defectos %")
+plot(I, Y, main="Gráfica materia prima v.s. porcentaje de defectos", xlab="Materia prima", ylab="Defectos %")
+
+```
+
+## Creamos el histograma
+```{r}
+multi.hist(x = muestreo, dcol = c("blue", "red"),
+           dlty = c("dotted","solid"), lwd = c(2,1),
+           main = c("A", "B", "C", "D", "E", "F", "G", "H", "I", "Y"))
+```
+
+
+## Después obtuvimos el correlograma para poder obtener un análisis más visual de la  correlación entre las variables.
+Al ver el correlograma, vimos que la velocidad de extrusión y la Presión de la bomba están relacionadas.
+```{r}
+corrplot(cor(datos))
+```
+## Creamos la gráfica de pares: 
+
+```{r}
+ggpairs(datos)
+
+```
+
+## 
+
+```{r}
+plot(PresionBomba, VelocidadExtrusion, main="Gráfica Presión de la Bomba \n v.s. Velocidad de extrusión", xlab="Presión de la Bomba [Bar]", ylab="Velocidad Extrusión [m/s]")
+plot(TempPlastico4Mezcladora, PorcentajeDefectos, main="Gráfica de Temperatura de Plástico 4 (mezcladora) \n v.s. Porcentaje de Defectos", xlab="Temperatura Plástico 4 [°C]", ylab="Defectos [%]")
+plot(TempPlastico3Bomba, PorcentajeDefectos, main="Gráfica de Temperatura de Plástico 3 (bomba) \n v.s. Porcentaje de Defectos", xlab="Temperatura Plástico 3 [°C]", ylab="Defectos [%]")
+plot(TempBarril, PorcentajeDefectos, main="Gráfica de Temperatura del Barril \n v.s. Porcentaje de Defectos", xlab="Temperatura del Barril [°C]", ylab="Defectos [%]")
+```
+
+## Obtuvimos la regresión lineal simple con una de las variables con mayor correlación
+
+```{r}
+regresionSimple <- lm(Y ~ C, data=muestreo)
+summary(regresionSimple)
+```
+
+## Analizamos la regresión lineal múltiple:
+### Regresión lineal de todas las variables
+```{r}
+regresion <- lm(Y ~ A + B + C + D + E + F + G + H + I, data=muestreo)
+summary(regresion)
+```
+### Regresión lineal eliminando:
+- Velocidad de extrusión
+- Temperatura de los enfriadores
+- Tipo de materia
+
+```{r}
+regresion1 <- lm(Y ~ A + B + C + D + E + F, data=muestreo)
+summary(regresion1)
+```
+
+### Regresión lineal eliminando:
+- Presión de la bomba
+- Velocidad de extrución
+- Tipo de materia
+
+```{r}
+regresion2 <- lm(Y ~ B + C + D + E + F + H, data=muestreo)
+summary(regresion2)
+```
+
+## Regresión lineal con las variables que tiene un valor p < 0.05
+
+```{r}
+regresion3 <- lm(Y ~ B + C + D + E + F, data=muestreo)
+summary(regresion3)
+```
+
+```{r}
+plot(TempPlastico4Mezcladora, PorcentajeDefectos)
+abline(regresionSimple, col = "red")
+```
+
+## Modelo de predicción
+
+```{r}
+datos_nuevos <- data.frame(A=73,B=213,C=220,D=195,E=110,F=130,G=4.5,H=70,I=2)
+predict(regresion1, datos_nuevos)
+```
+
+## Análisis
+
+
