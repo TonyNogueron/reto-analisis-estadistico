@@ -14,7 +14,10 @@ library(readxl)
 library(ggplot2)
 library(corrplot)
 library(GGally)
+library(broom)
 library(psych)
+library(lmtest)
+library(nortest)
 
 
 # Importar datos de situación problema
@@ -97,14 +100,17 @@ summary(regresion)
 
 regresion1 <- lm(Y ~ A + B + C + D + E + F, data=muestreo)
 summary(regresion1)
+glance(regresion1)
 
 # Regresión lineal ajustada 2
 regresion2 <- lm(Y ~ B + C + D + E + F + H, data=muestreo)
 summary(regresion2)
+glance(regresion2)
 
 #Regresión con las variables que tiene un valor p < 0.05
 regresion3 <- lm(Y ~ B + C + D + E + F, data=muestreo)
 summary(regresion3)
+glance(regresion3)
 
 plot(TempPlastico4Mezcladora, PorcentajeDefectos)
 abline(regresionSimple, col = "red")
@@ -113,4 +119,18 @@ abline(regresionSimple, col = "red")
 
 datos_nuevos <- data.frame(A=73,B=213,C=220,D=195,E=110,F=130,G=4.5,H=70,I=2)
 predict(regresion1, datos_nuevos)
+
+
+#dwtest(regresion1, data = muestreo)
+#bptest(regresion1)
+
+#hist(regresion1$residuals)
+
+
+#lillie.test(regresion1$residuals)
+
+step(regresion)
+mejor_modelo_step = lm(formula = Y ~ A + B + C + D + E + F, data = muestreo)
+summary(mejor_modelo_step)
+anova(mejor_modelo_step)
 
