@@ -5,7 +5,7 @@ date: "6/1/2022"
 output: html_document
 ---
   
-  ```{r setup, include=FALSE}
+```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
 library(tidyr)
@@ -16,6 +16,9 @@ library(ggplot2)
 library(corrplot)
 library(GGally)
 library(psych)
+library(Hmisc)
+library(car)
+library(olsrr)
 historico <- read_excel("Datos_Situacion_Problema.xlsx", sheet="Histórico de defectos")
 muestreo <- read_excel("Datos_Situacion_Problema.xlsx", sheet="Datos de muestreo", skip=1)
 indice <- read_excel("Datos_Situacion_Problema.xlsx", sheet="Índice")
@@ -48,7 +51,8 @@ La máquina de extrusión que se utiliza en el proceso es una Welex y de acuerdo
   |I|Tipo materia prima|
   
   ## Para empezar nuestro análisis renombramos las variables
-  ```{r}
+  
+```{r}
 attach(muestreo)
 #        NUEVO                 # ANTERIOR
 datos<- rename(muestreo, PresionBomba = A,
@@ -101,7 +105,7 @@ ggpairs(datos)
 
 ```
 
-## 
+## Graficamos las variables entre ellas
 
 ```{r}
 plot(PresionBomba, VelocidadExtrusion, main="Gráfica Presión de la Bomba \n v.s. Velocidad de extrusión", xlab="Presión de la Bomba [Bar]", ylab="Velocidad Extrusión [m/s]")
@@ -123,6 +127,8 @@ summary(regresionSimple)
 regresion <- lm(Y ~ A + B + C + D + E + F + G + H + I, data=muestreo)
 summary(regresion)
 ```
+El modelo con todas las variables introducidas como predictores, tiene un R de 0.7237, lo que nos indica que es capaz de explicar el 72.37% de la variabilidad observada en el porcentaje de defectos.
+
 ### Regresión lineal eliminando:
 - Velocidad de extrusión
 - Temperatura de los enfriadores
@@ -132,6 +138,8 @@ summary(regresion)
 regresion1 <- lm(Y ~ A + B + C + D + E + F, data=muestreo)
 summary(regresion1)
 ```
+
+El modelo sin las variables mencionadas anteriormente, tiene un R de 0.7293, lo que nos indica que es capaz de explicar el 72.93% de la variabilidad observada en el porcentaje de defectos.
 
 ### Regresión lineal eliminando:
 - Presión de la bomba
@@ -143,6 +151,8 @@ regresion2 <- lm(Y ~ B + C + D + E + F + H, data=muestreo)
 summary(regresion2)
 ```
 
+El modelo sin las variables mencionadas anteriormente, tiene un R de 0.7115, lo que nos indica que es capaz de explicar el 71.15% de la variabilidad observada en el porcentaje de defectos.
+
 ## Regresión lineal con las variables que tiene un valor p < 0.05
 
 ```{r}
@@ -150,10 +160,7 @@ regresion3 <- lm(Y ~ B + C + D + E + F, data=muestreo)
 summary(regresion3)
 ```
 
-```{r}
-plot(TempPlastico4Mezcladora, PorcentajeDefectos)
-abline(regresionSimple, col = "red")
-```
+El modelo con las variables con un valor p menor a 0.05, tiene un R de 0.7101, lo que nos indica que es capaz de explicar el 71.01% de la variabilidad observada en el porcentaje de defectos.
 
 ## Modelo de predicción
 
@@ -162,6 +169,147 @@ datos_nuevos <- data.frame(A=73,B=213,C=220,D=195,E=110,F=130,G=4.5,H=70,I=2)
 predict(regresion1, datos_nuevos)
 ```
 
-## Análisis
+# Búsqueda del mejor modelo para analizar la situación problema
+
+```{r}
+step(object = regresion, direction = "both", trace = 1)
+
+```
+
+Elegimos el modelo con menor AIC.
+
+```{r}
+ bestLm <- lm(formula = Y ~ A + B + C + D + E + F, data = muestreo)
+
+summary(bestLm)
+
+```
+
+## Interpretación del modelo elegido
+
+El modelo tiene un R^2 de 0.7293, por lo que es capaz de explicar el 72.93% de la variabilidad observada en el porcentaje de defectos.
+
+```{r}
+plot(bestLm)
+```
+
+### Análisis de la gráfica residuos vs valores ajustados
+
+Los datos 91, 45 y 13 presentan diferencias mayores, por lo que podrían tener algún problema.
+
+
+### Análisis de la gráfica normalidad de residuos
+
+Los datos 91, 45 y 13 se alejan de la normalidad.
+
+
+### Análisis de la gráfica localización-escala
+
+Los datos 91, 45 y 13 al aparecer por tercera vez nos indican que deberíamos analizar con más detalle para ubicar un posible problema.
+
+
+### Análisis de la gráfica residuos vs leverage
+
+Todos los residuos se encuentran dentro de la distancia de Cook, así que no hay problema.
+
+
+# Multicolinealidad
+
+```{r}
+rcorr(as.matrix(muestreo))
+```
+
+```{r}
+corrplot(cor(muestreo))
+```
+
+
+## Tolerancia  y Factor de Inflación de la Varianza del mejor modelo
+
+```{r}
+vif(bestLm)
+
+```
+
+```{r}
+tol <- 1/vif(bestLm)
+tol
+```
+
+Las covariables están relacionadas entre sí y su tolerancia no está debajo de 0.2 no indica que haya un problema serio.
+
+# Identificación de valores atípicos o influyentes en la regresión
+
+Análisis de las variables por separado.
+
+```{r}
+boxplot.matrix(as.matrix(muestreo),use.cols = T)
+```
+
+
+# Detección de influyentes
+*** revisar
+```{r}
+i <- nrow(bestLm)
+abs(dfbeta(bestLm))>sqrt(2/i)
+```
+
+Identificación de observaciones que son potencialmente influyentes.
+
+```{r}
+summary(influence.measures(bestLm))
+
+```
+```{r}
+influencePlot(bestLm)
+```
+
+Los círculos nos ayudan a detectar las observaciones influyentes y el tamaño de los círculos denota la intensidad de su influencia.
+
+Analizando la gráfica podemos observar que los datos 91, 30, 40 y 13 tienen mayor influencia que el resto de estos; además al tener un mayor tamaño son datos a los que debemos tener mayor cuidado.
+
+
+# Análisis de observaciones atípicas
+
+```{r}
+ols_plot_cooksd_bar(bestLm)
+
+```
+
+# Análisis de serie de tiempo
+
+```{r}
+str(historico)
+
+productoA = ts(historico$`Producto A`, start = 1, frequency = 12)
+productoB = ts(historico$`Producto B`, start = 1, frequency = 12)
+productoC = ts(historico$`Producto C`, start = 1, frequency = 12)
+print(productoA)
+print(productoB)
+print(productoC)
+#boxplot(productoA~ cycle(productoA)) #  non-numeric argument to binary operator
+cycle(productoA)
+cycle(productoB)
+cycle(productoC)
+
+#productoA.ts.desc = decompose(productoA)
+#productoB.ts.desc = decompose(productoB)
+#productoC.ts.desc = decompose(productoC)
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
