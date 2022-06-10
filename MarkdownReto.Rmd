@@ -1,5 +1,5 @@
 ---
-  title: "Analisis"
+title: "Analisis"
 author: "Paulina Galindo, Antonio Noguerón, Pamela Ruíz"
 date: "6/1/2022"
 output: html_document
@@ -86,10 +86,17 @@ plot(I, Y, main="Gráfica materia prima v.s. porcentaje de defectos", xlab="Mate
 ```
 
 ## Creamos el histograma
+
+Para encontrar el mejor modelo de regresión lineal, primero debemos determinar si la distribución de los datos en cada variable es normal. Esta distribución nos ayudará a comprobar la linealidad y la validez de usar estos datos en el modelo.
+
+Para observar la distribución de los datos graficaremos cada variable excepto la variable I que representa el tipo de material porque esta es una variable cualitativa que representa los 3 tipos de materiales.
+Gracias a que esta variable es cualitativa, nuestros datos se dividen en 3 grupos, uno por cada material.
+
+
 ```{r}
 multi.hist(x = muestreo, dcol = c("blue", "red"),
            dlty = c("dotted","solid"), lwd = c(2,1),
-           main = c("A", "B", "C", "D", "E", "F", "G", "H", "I", "Y"))
+           main = c("A", "B", "C", "D", "E", "F", "G", "H", "Y"))
 ```
 
 
@@ -122,14 +129,25 @@ summary(regresionSimple)
 ```
 
 ## Analizamos la regresión lineal múltiple:
+
+Para encontrar el mejor modelo de regresión lineal haremos varios modelos en donde haremos pruebas de hipótesis para ir eliminando las variables que no son significativas.
+
+Primero haremos un modelo de regresión para todo el conjunto de datos, pero como hay 3 tipos de materiales distintos, dividiremos nuestro conjunto de datos en 3 y realizaremos un modelo de regresión múltiple para cada conjunto de datos filtrado por material.
+
+
 ### Regresión lineal de todas las variables
 ```{r}
 regresion <- lm(Y ~ A + B + C + D + E + F + G + H + I, data=muestreo)
 summary(regresion)
 ```
 El modelo con todas las variables introducidas como predictores, tiene un R de 0.7237, lo que nos indica que es capaz de explicar el 72.37% de la variabilidad observada en el porcentaje de defectos.
+Después de hacer las pruebas de hipótesis podemos concluir que en las variables G (velocidad extrusión), H (temperatura enfriadores), I (tipo de material) no se rechaza la hipótesis nula; por ende, no se eliminarán del modelo.
 
-### Regresión lineal eliminando:
+
+Además, es necesario eliminar la variable G (velocidad extrusión) porque tiene un coeficiente de correlación de 0.859 con la variable A (presión bomba). Esto significa que están fuertemente relacionadas y para que un modelo de regresión múltiple sea correcto, es necesario que las variables sean independientes entre si; si no, una de las variables debe eliminarse.
+
+## Regresión lineal con las variables que tiene un valor p < 0.05
+#### Regresión lineal eliminando:
 - Velocidad de extrusión
 - Temperatura de los enfriadores
 - Tipo de materia
@@ -139,37 +157,12 @@ regresion1 <- lm(Y ~ A + B + C + D + E + F, data=muestreo)
 summary(regresion1)
 ```
 
-El modelo sin las variables mencionadas anteriormente, tiene un R de 0.7293, lo que nos indica que es capaz de explicar el 72.93% de la variabilidad observada en el porcentaje de defectos.
+El modelo sin las variables mencionadas anteriormente, tiene un R de 0.7293, lo que nos indica que es capaz de explicar el 72.93% de la variabilidad observada en el porcentaje de defectos. Después de realizar las pruebas de hipótesis podemos concluir que en todas las variables se rechaza la hipótesis nula y este es el mejor modelo.
 
-### Regresión lineal eliminando:
-- Presión de la bomba
-- Velocidad de extrución
-- Tipo de materia
+Para poder confirmar que el modelo escogido es el mejor, usamos la función step de R Studio que realiza todos los modelos de regresión múltiple, hace la comparación del valor AIC y regresa la fórmula del mejor modelo.
 
-```{r}
-regresion2 <- lm(Y ~ B + C + D + E + F + H, data=muestreo)
-summary(regresion2)
-```
 
-El modelo sin las variables mencionadas anteriormente, tiene un R de 0.7115, lo que nos indica que es capaz de explicar el 71.15% de la variabilidad observada en el porcentaje de defectos.
-
-## Regresión lineal con las variables que tiene un valor p < 0.05
-
-```{r}
-regresion3 <- lm(Y ~ B + C + D + E + F, data=muestreo)
-summary(regresion3)
-```
-
-El modelo con las variables con un valor p menor a 0.05, tiene un R de 0.7101, lo que nos indica que es capaz de explicar el 71.01% de la variabilidad observada en el porcentaje de defectos.
-
-## Modelo de predicción
-
-```{r}
-datos_nuevos <- data.frame(A=73,B=213,C=220,D=195,E=110,F=130,G=4.5,H=70,I=2)
-predict(regresion1, datos_nuevos)
-```
-
-# Búsqueda del mejor modelo para analizar la situación problema
+# Comprobación del modelo de regresión múltiple
 
 ```{r}
 step(object = regresion, direction = "both", trace = 1)
@@ -184,6 +177,7 @@ Elegimos el modelo con menor AIC.
 summary(bestLm)
 
 ```
+
 
 ## Interpretación del modelo elegido
 
@@ -211,6 +205,28 @@ Los datos 91, 45 y 13 al aparecer por tercera vez nos indican que deberíamos an
 ### Análisis de la gráfica residuos vs leverage
 
 Todos los residuos se encuentran dentro de la distancia de Cook, así que no hay problema.
+
+
+
+
+
+## Modelo de predicción
+
+```{r}
+datos_nuevos <- data.frame(A=73,B=213,C=220,D=195,E=110,F=130,G=4.5,H=70,I=2)
+predict(regresion1, datos_nuevos)
+```
+
+
+
+
+
+----------------------------------------------------------------------------
+# REVISAR!!!!!!
+
+
+
+
 
 
 # Multicolinealidad
