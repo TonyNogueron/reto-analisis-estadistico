@@ -1,11 +1,11 @@
 ---
-  title: "Analisis"
+title: "Analisis"
 author: "Paulina Galindo, Antonio Noguerón, Pamela Ruíz"
 date: "6/1/2022"
 output: html_document
 ---
   
-  ```{r setup, include=FALSE}
+```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
 library(tidyr)
@@ -16,6 +16,9 @@ library(ggplot2)
 library(corrplot)
 library(GGally)
 library(psych)
+library(Hmisc)
+library(car)
+library(olsrr)
 historico <- read_excel("Datos_Situacion_Problema.xlsx", sheet="Histórico de defectos")
 muestreo <- read_excel("Datos_Situacion_Problema.xlsx", sheet="Datos de muestreo", skip=1)
 indice <- read_excel("Datos_Situacion_Problema.xlsx", sheet="Índice")
@@ -48,7 +51,8 @@ La máquina de extrusión que se utiliza en el proceso es una Welex y de acuerdo
   |I|Tipo materia prima|
   
   ## Para empezar nuestro análisis renombramos las variables
-  ```{r}
+  
+```{r}
 attach(muestreo)
 #        NUEVO                 # ANTERIOR
 datos<- rename(muestreo, PresionBomba = A,
@@ -82,10 +86,17 @@ plot(I, Y, main="Gráfica materia prima v.s. porcentaje de defectos", xlab="Mate
 ```
 
 ## Creamos el histograma
+
+Para encontrar el mejor modelo de regresión lineal, primero debemos determinar si la distribución de los datos en cada variable es normal. Esta distribución nos ayudará a comprobar la linealidad y la validez de usar estos datos en el modelo.
+
+Para observar la distribución de los datos graficaremos cada variable excepto la variable I que representa el tipo de material porque esta es una variable cualitativa que representa los 3 tipos de materiales.
+Gracias a que esta variable es cualitativa, nuestros datos se dividen en 3 grupos, uno por cada material.
+
+
 ```{r}
 multi.hist(x = muestreo, dcol = c("blue", "red"),
            dlty = c("dotted","solid"), lwd = c(2,1),
-           main = c("A", "B", "C", "D", "E", "F", "G", "H", "I", "Y"))
+           main = c("A", "B", "C", "D", "E", "F", "G", "H"))
 ```
 
 
@@ -101,7 +112,7 @@ ggpairs(datos)
 
 ```
 
-## 
+## Graficamos las variables entre ellas
 
 ```{r}
 plot(PresionBomba, VelocidadExtrusion, main="Gráfica Presión de la Bomba \n v.s. Velocidad de extrusión", xlab="Presión de la Bomba [Bar]", ylab="Velocidad Extrusión [m/s]")
@@ -118,12 +129,25 @@ summary(regresionSimple)
 ```
 
 ## Analizamos la regresión lineal múltiple:
+
+Para encontrar el mejor modelo de regresión lineal haremos varios modelos en donde haremos pruebas de hipótesis para ir eliminando las variables que no son significativas.
+
+Primero haremos un modelo de regresión para todo el conjunto de datos, pero como hay 3 tipos de materiales distintos, dividiremos nuestro conjunto de datos en 3 y realizaremos un modelo de regresión múltiple para cada conjunto de datos filtrado por material.
+
+
 ### Regresión lineal de todas las variables
 ```{r}
 regresion <- lm(Y ~ A + B + C + D + E + F + G + H + I, data=muestreo)
 summary(regresion)
 ```
-### Regresión lineal eliminando:
+El modelo con todas las variables introducidas como predictores, tiene un R de 0.7237, lo que nos indica que es capaz de explicar el 72.37% de la variabilidad observada en el porcentaje de defectos.
+Después de hacer las pruebas de hipótesis podemos concluir que en las variables G (velocidad extrusión), H (temperatura enfriadores), I (tipo de material) no se rechaza la hipótesis nula; por ende, no se eliminarán del modelo.
+
+
+Además, es necesario eliminar la variable G (velocidad extrusión) porque tiene un coeficiente de correlación de 0.859 con la variable A (presión bomba). Esto significa que están fuertemente relacionadas y para que un modelo de regresión múltiple sea correcto, es necesario que las variables sean independientes entre si; si no, una de las variables debe eliminarse.
+
+## Regresión lineal con las variables que tiene un valor p < 0.05
+#### Regresión lineal eliminando:
 - Velocidad de extrusión
 - Temperatura de los enfriadores
 - Tipo de materia
@@ -133,27 +157,56 @@ regresion1 <- lm(Y ~ A + B + C + D + E + F, data=muestreo)
 summary(regresion1)
 ```
 
-### Regresión lineal eliminando:
-- Presión de la bomba
-- Velocidad de extrución
-- Tipo de materia
+El modelo sin las variables mencionadas anteriormente, tiene un R de 0.7293, lo que nos indica que es capaz de explicar el 72.93% de la variabilidad observada en el porcentaje de defectos. Después de realizar las pruebas de hipótesis podemos concluir que en todas las variables se rechaza la hipótesis nula y este es el mejor modelo.
+
+Para poder confirmar que el modelo escogido es el mejor, usamos la función step de R Studio que realiza todos los modelos de regresión múltiple, hace la comparación del valor AIC y regresa la fórmula del mejor modelo.
+
+
+# Comprobación del modelo de regresión múltiple
 
 ```{r}
-regresion2 <- lm(Y ~ B + C + D + E + F + H, data=muestreo)
-summary(regresion2)
+step(object = regresion, direction = "both", trace = 1)
+
 ```
 
-## Regresión lineal con las variables que tiene un valor p < 0.05
-
-```{r}
-regresion3 <- lm(Y ~ B + C + D + E + F, data=muestreo)
-summary(regresion3)
-```
+Elegimos el modelo con menor AIC.
 
 ```{r}
-plot(TempPlastico4Mezcladora, PorcentajeDefectos)
-abline(regresionSimple, col = "red")
+ bestLm <- lm(formula = Y ~ A + B + C + D + E + F, data = muestreo)
+
+summary(bestLm)
+
 ```
+
+
+## Interpretación del modelo elegido
+
+El modelo tiene un R^2 de 0.7293, por lo que es capaz de explicar el 72.93% de la variabilidad observada en el porcentaje de defectos.
+
+```{r}
+plot(bestLm)
+```
+
+### Análisis de la gráfica residuos vs valores ajustados
+
+Los datos 91, 45 y 13 presentan diferencias mayores, por lo que podrían tener algún problema.
+
+
+### Análisis de la gráfica normalidad de residuos
+
+Los datos 91, 45 y 13 se alejan de la normalidad.
+
+
+### Análisis de la gráfica localización-escala
+
+Los datos 91, 45 y 13 al aparecer por tercera vez nos indican que deberíamos analizar con más detalle para ubicar un posible problema.
+
+
+### Análisis de la gráfica residuos vs leverage
+
+Todos los residuos se encuentran dentro de la distancia de Cook, así que no hay problema.
+
+
 
 ## Modelo de predicción
 
@@ -162,6 +215,182 @@ datos_nuevos <- data.frame(A=73,B=213,C=220,D=195,E=110,F=130,G=4.5,H=70,I=2)
 predict(regresion1, datos_nuevos)
 ```
 
-## Análisis
+
+
+## Modelos de regresión múltiple por cada tipo de material
+
+Para poder crear tres modelos de regresión múltiple para cada tipo de material, debemos filtrar los datos originales para crear tres dataframes que representen los datos obtenidos al usar cierto tipo de material.
+
+
+```{r}
+tipo1 <- filter(muestreo, I==1)
+tipo2 <- filter(muestreo, I==2)
+tipo3 <- filter(muestreo, I==3)
+attach(tipo1)
+attach(tipo2)
+attach(tipo3)
+
+```
+
+
+## Dataframe con tipo de material 1
+```{r}
+tipo1
+```
+
+### Dataframe con tipo de material 2
+```{r}
+tipo2
+```
+
+### Dataframe con tipo de material 3
+```{r}
+tipo3
+```
+
+Después de crear los tres dataframes filtrados, creamos el modelo inicial de cada uno utilizando todas las variables y realizamos las pruebas de hipótesis hasta encontrar el mejor modelo posible.
+
+
+### Modelo para el tipo de material 1
+```{r}
+m1 = lm(Y~A+B+C+D+E+F+G+H, dataset=tipo1)
+summary(m1)
+step(object = m1, direction = "both", trace = 1)
+m1 = lm(formula = Y ~ B + C + D + E + F, dataset = tipo1)
+summary(m1)
+```
+
+
+### Modelo para el tipo de material 2
+```{r}
+m2 = lm(Y~A+B+C+D+E+F+G+H, dataset=tipo2)
+summary(m2)
+step(object = m2, direction = "both", trace = 1)
+m2 = lm(formula = Y ~ B + C + D + E + F, dataset = tipo2)
+summary(m2)
+```
+
+### Modelo para el tipo de material 3
+``` {r}
+m3 = lm(Y~A+B+C+D+E+F+G+H, dataset=tipo3)
+summary(m3)
+step(object = m3, direction = "both", trace = 1)
+m3 = lm(formula = Y ~ B + C + D + E + F, dataset = tipo3)
+summary(m3)
+
+```
+
+
+
+
+
+
+
+----------------------------------------------------------------------------
+# REVISAR!!!!!!
+
+
+
+
+
+
+# Multicolinealidad
+
+```{r}
+rcorr(as.matrix(muestreo))
+```
+
+```{r}
+corrplot(cor(muestreo))
+```
+
+
+## Tolerancia  y Factor de Inflación de la Varianza del mejor modelo
+
+```{r}
+vif(bestLm)
+
+```
+
+```{r}
+tol <- 1/vif(bestLm)
+tol
+```
+
+Las covariables están relacionadas entre sí y su tolerancia no está debajo de 0.2 no indica que haya un problema serio.
+
+# Identificación de valores atípicos o influyentes en la regresión
+
+Análisis de las variables por separado.
+
+```{r}
+boxplot.matrix(as.matrix(muestreo),use.cols = T)
+```
+
+
+# Detección de influyentes
+*** revisar
+```{r}
+i <- nrow(bestLm)
+abs(dfbeta(bestLm))>sqrt(2/i)
+```
+
+Identificación de observaciones que son potencialmente influyentes.
+
+```{r}
+summary(influence.measures(bestLm))
+
+```
+```{r}
+influencePlot(bestLm)
+```
+
+Los círculos nos ayudan a detectar las observaciones influyentes y el tamaño de los círculos denota la intensidad de su influencia.
+
+Analizando la gráfica podemos observar que los datos 91, 30, 40 y 13 tienen mayor influencia que el resto de estos; además al tener un mayor tamaño son datos a los que debemos tener mayor cuidado.
+
+
+# Análisis de observaciones atípicas
+
+```{r}
+ols_plot_cooksd_bar(bestLm)
+
+```
+
+# Análisis de serie de tiempo
+
+```{r}
+str(historico)
+
+productoA = ts(historico$`Producto A`, start = 1, frequency = 12)
+productoB = ts(historico$`Producto B`, start = 1, frequency = 12)
+productoC = ts(historico$`Producto C`, start = 1, frequency = 12)
+print(productoA)
+print(productoB)
+print(productoC)
+#boxplot(productoA~ cycle(productoA)) #  non-numeric argument to binary operator
+cycle(productoA)
+cycle(productoB)
+cycle(productoC)
+
+#productoA.ts.desc = decompose(productoA)
+#productoB.ts.desc = decompose(productoB)
+#productoC.ts.desc = decompose(productoC)
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
