@@ -1,5 +1,5 @@
 ---
-title: "Analisis"
+title: "Análisis"
 author: "Paulina Galindo, Antonio Noguerón, Pamela Ruíz"
 date: "6/1/2022"
 output: html_document
