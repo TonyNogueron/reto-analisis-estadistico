@@ -208,14 +208,28 @@ Todos los residuos se encuentran dentro de la distancia de Cook, así que no hay
 
 
 
-
-
 ## Modelo de predicción
 
 ```{r}
 datos_nuevos <- data.frame(A=73,B=213,C=220,D=195,E=110,F=130,G=4.5,H=70,I=2)
 predict(regresion1, datos_nuevos)
 ```
+
+
+
+## Modelos de regresión múltiple por cada tipo de material
+
+Para poder crear tres modelos de regresión múltiple para cada tipo de material, debemos filtrar los datos originales para crear tres dataframes que representen los datos obtenidos al usar cierto tipo de material.
+
+
+```{r}
+Tipo1 <- filter(muestreo, I == 1)
+
+
+
+```
+
+
 
 
 
