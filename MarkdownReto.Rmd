@@ -96,7 +96,7 @@ Gracias a que esta variable es cualitativa, nuestros datos se dividen en 3 grupo
 ```{r}
 multi.hist(x = muestreo, dcol = c("blue", "red"),
            dlty = c("dotted","solid"), lwd = c(2,1),
-           main = c("A", "B", "C", "D", "E", "F", "G", "H", "Y"))
+           main = c("A", "B", "C", "D", "E", "F", "G", "H"))
 ```
 
 
@@ -223,9 +223,60 @@ Para poder crear tres modelos de regresión múltiple para cada tipo de material
 
 
 ```{r}
-Tipo1 <- filter(muestreo, I == 1)
+tipo1 <- filter(muestreo, I==1)
+tipo2 <- filter(muestreo, I==2)
+tipo3 <- filter(muestreo, I==3)
+attach(tipo1)
+attach(tipo2)
+attach(tipo3)
+
+```
 
 
+## Dataframe con tipo de material 1
+```{r}
+tipo1
+```
+
+### Dataframe con tipo de material 2
+```{r}
+tipo2
+```
+
+### Dataframe con tipo de material 3
+```{r}
+tipo3
+```
+
+Después de crear los tres dataframes filtrados, creamos el modelo inicial de cada uno utilizando todas las variables y realizamos las pruebas de hipótesis hasta encontrar el mejor modelo posible.
+
+
+### Modelo para el tipo de material 1
+```{r}
+m1 = lm(Y~A+B+C+D+E+F+G+H, dataset=tipo1)
+summary(m1)
+step(object = m1, direction = "both", trace = 1)
+m1 = lm(formula = Y ~ B + C + D + E + F, dataset = tipo1)
+summary(m1)
+```
+
+
+### Modelo para el tipo de material 2
+```{r}
+m2 = lm(Y~A+B+C+D+E+F+G+H, dataset=tipo2)
+summary(m2)
+step(object = m2, direction = "both", trace = 1)
+m2 = lm(formula = Y ~ B + C + D + E + F, dataset = tipo2)
+summary(m2)
+```
+
+### Modelo para el tipo de material 3
+``` {r}
+m3 = lm(Y~A+B+C+D+E+F+G+H, dataset=tipo3)
+summary(m3)
+step(object = m3, direction = "both", trace = 1)
+m3 = lm(formula = Y ~ B + C + D + E + F, dataset = tipo3)
+summary(m3)
 
 ```
 
