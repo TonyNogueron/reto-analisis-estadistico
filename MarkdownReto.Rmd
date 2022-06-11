@@ -189,7 +189,7 @@ summary(bestLm)
 ```
 
 
-## Interpretación del modelo elegido
+## Validación del modelo elegido
 
 El modelo tiene un R^2 de 0.7293, por lo que es capaz de explicar el 72.93% de la variabilidad observada en el porcentaje de defectos.
 
