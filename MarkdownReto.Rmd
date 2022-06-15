@@ -1,5 +1,5 @@
 ---
-title: "Analisis"
+title: "Análisis"
 author: "Paulina Galindo, Antonio Noguerón, Pamela Ruíz"
 date: "6/1/2022"
 output: html_document
@@ -19,6 +19,12 @@ library(psych)
 library(Hmisc)
 library(car)
 library(olsrr)
+library(nortest)
+library(lmtest)
+library(broom)
+
+
+
 historico <- read_excel("Datos_Situacion_Problema.xlsx", sheet="Histórico de defectos")
 muestreo <- read_excel("Datos_Situacion_Problema.xlsx", sheet="Datos de muestreo", skip=1)
 indice <- read_excel("Datos_Situacion_Problema.xlsx", sheet="Índice")
@@ -94,7 +100,8 @@ Gracias a que esta variable es cualitativa, nuestros datos se dividen en 3 grupo
 
 
 ```{r}
-multi.hist(x = muestreo, dcol = c("blue", "red"),
+muestreo2 <- select(muestreo, -I, -Y)
+multi.hist(x = muestreo2, dcol = c("blue", "red"),
            dlty = c("dotted","solid"), lwd = c(2,1),
            main = c("A", "B", "C", "D", "E", "F", "G", "H"))
 ```
@@ -111,6 +118,9 @@ corrplot(cor(datos))
 ggpairs(datos)
 
 ```
+
+Con estas gráficas podemos observar que existe una correlación de 0.859 entre la variable de Presión de la Bomba y la Velocidad de Extrusión. Esto significa que tienen una relación directamente proporcional.
+
 
 ## Graficamos las variables entre ellas
 
@@ -141,7 +151,7 @@ regresion <- lm(Y ~ A + B + C + D + E + F + G + H + I, data=muestreo)
 summary(regresion)
 ```
 El modelo con todas las variables introducidas como predictores, tiene un R de 0.7237, lo que nos indica que es capaz de explicar el 72.37% de la variabilidad observada en el porcentaje de defectos.
-Después de hacer las pruebas de hipótesis podemos concluir que en las variables G (velocidad extrusión), H (temperatura enfriadores), I (tipo de material) no se rechaza la hipótesis nula; por ende, no se eliminarán del modelo.
+Después de hacer las pruebas de hipótesis podemos concluir que en las variables G (velocidad extrusión), H (temperatura enfriadores), I (tipo de material) no se rechaza la hipótesis nula; por ende, se eliminarán del modelo.
 
 
 Además, es necesario eliminar la variable G (velocidad extrusión) porque tiene un coeficiente de correlación de 0.859 con la variable A (presión bomba). Esto significa que están fuertemente relacionadas y para que un modelo de regresión múltiple sea correcto, es necesario que las variables sean independientes entre si; si no, una de las variables debe eliminarse.
@@ -150,7 +160,7 @@ Además, es necesario eliminar la variable G (velocidad extrusión) porque tiene
 #### Regresión lineal eliminando:
 - Velocidad de extrusión
 - Temperatura de los enfriadores
-- Tipo de materia
+- Tipo de material
 
 ```{r}
 regresion1 <- lm(Y ~ A + B + C + D + E + F, data=muestreo)
@@ -179,9 +189,18 @@ summary(bestLm)
 ```
 
 
-## Interpretación del modelo elegido
+## Validación del modelo elegido
 
 El modelo tiene un R^2 de 0.7293, por lo que es capaz de explicar el 72.93% de la variabilidad observada en el porcentaje de defectos.
+
+Para que un modelo de regresión múltiple sea considerado "correcto" debe cumplir con los siguientes supuestos:
+
+1. Linealidad
+2. Independencia de los residuos
+3. Homoscedasticidad
+4. Normalidad en los residuos
+
+Además, debe haber más observaciones en el conjunto de datos que parámetros y las variables deben ser independientes entre ellas.
 
 ```{r}
 plot(bestLm)
@@ -189,23 +208,77 @@ plot(bestLm)
 
 ### Análisis de la gráfica residuos vs valores ajustados
 
+En esta gráfica lo ideal para poder concluir que el supuesto de linealidad se cumple es que la línea roja debe estar lo más horizontal posible y los datos deben estar dispersos. Como esto sí se cumple, se cumple el supuesto de linealidad.
+
 Los datos 91, 45 y 13 presentan diferencias mayores, por lo que podrían tener algún problema.
 
-
 ### Análisis de la gráfica normalidad de residuos
+
+En esta gráfica lo ideal para poder concluir que el supuesto de normalidad en los residuos se cumple es que la mayoría de los datos deben estar sobre la línea punteada. Como esto sí se cumple, podemos concluir que sí hay normalidad en los residuos.
 
 Los datos 91, 45 y 13 se alejan de la normalidad.
 
 
 ### Análisis de la gráfica localización-escala
 
+En esta gráfica lo ideal para poder concluir que el supuesto de homoscedasticidad (varianza constante) se cumple es que la línea roja debe ser lo más horizontal posible y los datos deben estar dispersos. Como esto no se cumple totalmente, no podemos concluir que hay homoscedasticidad.
+
 Los datos 91, 45 y 13 al aparecer por tercera vez nos indican que deberíamos analizar con más detalle para ubicar un posible problema.
 
 
 ### Análisis de la gráfica residuos vs leverage
 
-Todos los residuos se encuentran dentro de la distancia de Cook, así que no hay problema.
+En esta gráfica podemos determinar los datos atípicos de nuestra base de datos. Los datos que estén fuera de los límites marcados por la línea punteada roja (la distancia de Cook) son los datos atípicos.
 
+Como todos los residuos se encuentran dentro de la distancia de Cook, ningún dato es atípico.
+
+
+
+## Confirmación de Supuestos
+
+Con las interpretaciones de las gráficas anteriores, concluimos que se cumple el supuesto de linealidad y normalidad. Para poder confirmar esto, podemos realizar ciertas pruebas.
+
+### Prueba Durbin-Watson
+
+La prueba Drubin-Watson nos sirve para verificar si hay una independencia en nuestros datos.
+Si el valor-p es mayor que alfa, no se rechaza la hipótesis nula y concluimos que sí hay independencia.
+Si el valor-p es menor que alfa, sí se rechaza la hipótesis nula y concluimos que no hay independencia.  
+
+```{r}
+dwtest(bestLm, data = muestreo)
+```
+Podemos observar que el valor-p es de 0.8844; por ende, sí se cumple el supuesto de independencia.
+
+### Prueba Breusch-Pagan
+
+La prueba Breusch-Pagan es una prueba que nos permite verificar si existe la homocedasticidad (varianza constante).
+
+Si el valor-p es mayor que alfa, no se rechaza la hipótesis nula y concluimos que sí tienen varianza constante.
+Si el valor-p es menor que alfa, sí se rechaza la hipótesis nula y concluimos que no tienen varianza constante. 
+
+
+```{r}
+bptest(bestLm)
+```
+Podemos observar que el valor-p es de 0.1777; por ende, nuestros residuos sí tienen varianza constante.
+
+
+### Prueba Lillie
+
+La prueba lillie nos sirve para verificar si existe la normalidad en los residuos.
+Primero se grafica un histograma y se determina si tiene una distribución normal.
+Después para verificar esta normalidad de forma numérica se hace la prueba Lillie.
+Si el valor-p es mayor que alfa, no se rechaza la hipótesis nula y concluimos que sí hay normalidad en los residuos.
+Si el valor-p es menor que alfa, sí se rechaza la hipótesis nula y concluimos que no hay normalidad en los residuos.
+
+
+```{r}
+hist(bestLm$residuals)
+lillie.test(bestLm$residuals)
+
+```
+
+Podemos observar que el histograma sí se ve distribuido y como el valor-p es de 0.2745, concluimos que sí hay normalidad en los residuos.
 
 
 ## Modelo de predicción
@@ -214,7 +287,6 @@ Todos los residuos se encuentran dentro de la distancia de Cook, así que no hay
 datos_nuevos <- data.frame(A=73,B=213,C=220,D=195,E=110,F=130,G=4.5,H=70,I=2)
 predict(regresion1, datos_nuevos)
 ```
-
 
 
 ## Modelos de regresión múltiple por cada tipo de material
@@ -226,10 +298,6 @@ Para poder crear tres modelos de regresión múltiple para cada tipo de material
 tipo1 <- filter(muestreo, I==1)
 tipo2 <- filter(muestreo, I==2)
 tipo3 <- filter(muestreo, I==3)
-attach(tipo1)
-attach(tipo2)
-attach(tipo3)
-
 ```
 
 
@@ -253,36 +321,40 @@ Después de crear los tres dataframes filtrados, creamos el modelo inicial de ca
 
 ### Modelo para el tipo de material 1
 ```{r}
-m1 = lm(Y~A+B+C+D+E+F+G+H, dataset=tipo1)
+m1 = lm(Y~A+B+C+D+E+F+G+H, data=tipo1)
 summary(m1)
 step(object = m1, direction = "both", trace = 1)
-m1 = lm(formula = Y ~ B + C + D + E + F, dataset = tipo1)
+m1 = lm(formula = Y ~ B + C + D + E + F, data = tipo1)
 summary(m1)
 ```
 
 
 ### Modelo para el tipo de material 2
 ```{r}
-m2 = lm(Y~A+B+C+D+E+F+G+H, dataset=tipo2)
+m2 = lm(Y~A+B+C+D+E+F+G+H, data=tipo2)
 summary(m2)
 step(object = m2, direction = "both", trace = 1)
-m2 = lm(formula = Y ~ B + C + D + E + F, dataset = tipo2)
+m2 = lm(formula = Y ~ B + C + D + E + F, data= tipo2)
 summary(m2)
 ```
 
 ### Modelo para el tipo de material 3
 ``` {r}
-m3 = lm(Y~A+B+C+D+E+F+G+H, dataset=tipo3)
+m3 = lm(Y~A+B+C+D+E+F+G+H, data=tipo3)
 summary(m3)
 step(object = m3, direction = "both", trace = 1)
-m3 = lm(formula = Y ~ B + C + D + E + F, dataset = tipo3)
+m3 = lm(formula = Y ~ B + C + D + E + F, data= tipo3)
 summary(m3)
 
 ```
 
 
+# Análisis de observaciones atípicas
 
+```{r}
+ols_plot_cooksd_bar(bestLm)
 
+```
 
 
 
@@ -350,12 +422,6 @@ Los círculos nos ayudan a detectar las observaciones influyentes y el tamaño d
 Analizando la gráfica podemos observar que los datos 91, 30, 40 y 13 tienen mayor influencia que el resto de estos; además al tener un mayor tamaño son datos a los que debemos tener mayor cuidado.
 
 
-# Análisis de observaciones atípicas
-
-```{r}
-ols_plot_cooksd_bar(bestLm)
-
-```
 
 # Análisis de serie de tiempo
 
