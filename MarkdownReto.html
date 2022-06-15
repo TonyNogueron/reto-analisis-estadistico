@@ -863,10 +863,191 @@ residuos.</p>
 </div>
 <div id="modelo-de-predicción" class="section level2">
 <h2>Modelo de predicción</h2>
-<pre class="r"><code>datos_nuevos &lt;- data.frame(A=73,B=213,C=220,D=195,E=110,F=130,G=4.5,H=70,I=2)
-predict(regresion1, datos_nuevos)</code></pre>
+<p>Logramos obtener un buen modelo de regresión múltiple que cumple con
+los supuestos y validaciones, ahora para ayudar a la empresa, iremos
+variando algunos datos para encontrar las mejores configuraciones para
+obtener un porcentaje de defectos bajo.</p>
+<p>Realizaremos un breve análisis estadístico de los datos para
+encontrar posibles valores para las variables. Usaremos la función
+describe().</p>
+<pre class="r"><code>#Datos escogidos aleatoriamente
+datos_nuevos &lt;- data.frame(A=73,B=213,C=220,D=195,E=110,F=130,G=4.5,H=70,I=2)
+predict(bestLm, datos_nuevos)</code></pre>
 <pre><code>##        1 
 ## 35.75315</code></pre>
+<pre class="r"><code>descripcion &lt;- describe(muestreo)
+descripcion</code></pre>
+<pre><code>## muestreo 
+## 
+##  10  Variables      100  Observations
+## --------------------------------------------------------------------------------
+## A 
+##        n  missing distinct     Info     Mean      Gmd      .05      .10 
+##      100        0       19     0.99    36.98    23.19    17.95    19.00 
+##      .25      .50      .75      .90      .95 
+##    20.00    22.00    67.00    71.20    73.00 
+## 
+## lowest : 16 17 18 19 20, highest: 69 71 73 74 75
+##                                                                            
+## Value        16   17   18   19   20   21   22   23   24   25   65   66   67
+## Frequency     3    2    1    8   14   13   13    7    5    1    1    1   11
+## Proportion 0.03 0.02 0.01 0.08 0.14 0.13 0.13 0.07 0.05 0.01 0.01 0.01 0.11
+##                                         
+## Value        68   69   71   73   74   75
+## Frequency     3    2    5    6    2    2
+## Proportion 0.03 0.02 0.05 0.06 0.02 0.02
+## --------------------------------------------------------------------------------
+## B 
+##        n  missing distinct     Info     Mean      Gmd      .05      .10 
+##      100        0       55    0.999    221.7    23.85    184.0    187.9 
+##      .25      .50      .75      .90      .95 
+##    205.0    226.5    237.0    245.1    251.1 
+## 
+## lowest : 167 176 181 182 183, highest: 250 251 253 254 256
+## --------------------------------------------------------------------------------
+## C 
+##        n  missing distinct     Info     Mean      Gmd      .05      .10 
+##      100        0       48    0.999    214.5    22.93    187.9    191.0 
+##      .25      .50      .75      .90      .95 
+##    199.0    207.0    235.0    243.0    246.1 
+## 
+## lowest : 184 185 186 188 190, highest: 246 247 248 250 252
+## --------------------------------------------------------------------------------
+## D 
+##        n  missing distinct     Info     Mean      Gmd      .05      .10 
+##      100        0       55    0.999    220.3    25.86    191.9    195.0 
+##      .25      .50      .75      .90      .95 
+##    200.8    212.5    243.0    254.0    258.1 
+## 
+## lowest : 186 187 189 191 192, highest: 258 260 261 263 264
+## --------------------------------------------------------------------------------
+## E 
+##        n  missing distinct     Info     Mean      Gmd      .05      .10 
+##      100        0       34    0.998    98.51    21.37    76.95    77.90 
+##      .25      .50      .75      .90      .95 
+##    81.00    87.50   118.00   124.00   125.05 
+## 
+## lowest :  74  75  76  77  78, highest: 125 126 127 128 129
+## --------------------------------------------------------------------------------
+## F 
+##        n  missing distinct     Info     Mean      Gmd      .05      .10 
+##      100        0       46    0.999    146.7    31.87    113.0    114.0 
+##      .25      .50      .75      .90      .95 
+##    120.0    144.5    175.0    184.0    187.0 
+## 
+## lowest : 108 111 112 113 114, highest: 184 186 187 188 189
+## --------------------------------------------------------------------------------
+## G 
+##        n  missing distinct     Info     Mean      Gmd      .05      .10 
+##      100        0      100        1    1.975    1.602   0.4352   0.4993 
+##      .25      .50      .75      .90      .95 
+##   0.6987   1.6438   2.7933   4.4026   4.6643 
+## 
+## lowest : 0.23870 0.30420 0.35000 0.39750 0.40180
+## highest: 5.34970 5.35665 5.43000 5.48390 5.60625
+## --------------------------------------------------------------------------------
+## H 
+##        n  missing distinct     Info     Mean      Gmd      .05      .10 
+##      100        0       60        1    85.29     25.9     50.0     54.0 
+##      .25      .50      .75      .90      .95 
+##     67.0     84.0    105.0    114.0    120.1 
+## 
+## lowest :  45  46  49  50  52, highest: 120 122 123 124 125
+## --------------------------------------------------------------------------------
+## I 
+##        n  missing distinct     Info     Mean      Gmd 
+##      100        0        3    0.827     2.04   0.9939 
+##                          
+## Value         1    2    3
+## Frequency    42   12   46
+## Proportion 0.42 0.12 0.46
+## --------------------------------------------------------------------------------
+## Y 
+##        n  missing distinct     Info     Mean      Gmd      .05      .10 
+##      100        0      100        1    42.29    14.21    23.34    26.08 
+##      .25      .50      .75      .90      .95 
+##    34.22    41.65    49.34    59.95    65.30 
+## 
+## lowest : 15.71330 16.57245 18.82613 20.02194 21.76614
+## highest: 68.07452 68.12488 68.44437 70.81549 72.45548
+## --------------------------------------------------------------------------------</code></pre>
+<p>Tomando las demás variables constantes con el valor de sus medias,
+veremos como va influyendo el cambio de valores en una variable
+independiente para ir guardando las posibles configuraciones.</p>
+<p>Iniciaremos con la variable A(presión de la bomba): Esta tiene un
+valor mínimo de 16 y máximo de 75.</p>
+<pre class="r"><code>#Dejando las demás variables con el valor de sus medias, haremos una predicción del porcentaje de defectos con presión de la bomba:
+
+#baja
+datos_nuevos &lt;- data.frame(A=20,B=221.7,C=214.5,D=220.3,E=98.51,F=146.7)
+predict(bestLm, datos_nuevos)</code></pre>
+<pre><code>##        1 
+## 43.65775</code></pre>
+<pre class="r"><code>#media
+datos_nuevos &lt;- data.frame(A=45,B=221.7,C=214.5,D=220.3,E=98.51,F=146.7)
+predict(bestLm, datos_nuevos)</code></pre>
+<pre><code>##        1 
+## 41.61792</code></pre>
+<pre class="r"><code>#alta
+datos_nuevos &lt;- data.frame(A=75,B=221.7,C=214.5,D=220.3,E=98.51,F=146.7)
+predict(bestLm, datos_nuevos)</code></pre>
+<pre><code>##        1 
+## 39.17014</code></pre>
+<p>Podemos ver después de este breve análisis que una presión de la
+bomba alta, disminuye el porcentaje de defectos</p>
+<p>Ahora realizaremos este proceso con las demás variables y daremos un
+breve resumen de la información obtenida.</p>
+</div>
+<div id="información-obtenida-con-pruebas-de-predicción." class="section level2">
+<h2>Información obtenida con pruebas de predicción.</h2>
+<div id="variable-a-presión-de-la-bomba-bar" class="section level4">
+<h4>Variable A: Presión de la Bomba [Bar]:</h4>
+<p>Después de las pruebas pudimos obtener que a mayor presión, menor
+porcentaje de defectos.</p>
+</div>
+<div id="variable-b-temperatura-del-plástico-3-bomba-c" class="section level4">
+<h4>Variable B: Temperatura del Plástico 3 (Bomba) [°C]:</h4>
+<p>A mayor temperatura, menor porcentaje de defectos.</p>
+</div>
+<div id="variable-c-temperatura-del-plástico-4-mezcladora-c" class="section level4">
+<h4>Variable C: Temperatura del Plástico 4 (Mezcladora) [°C]:</h4>
+<p>A mayor temperatura, menor porcentaje de defectos.</p>
+</div>
+<div id="variable-d-temperatura-tornillo-usillo-c" class="section level4">
+<h4>Variable D: Temperatura tornillo (Usillo) [°C]:</h4>
+<p>A menor temperatura, menor porcentaje de defectos.</p>
+</div>
+<div id="variable-e-velocidad-del-tornillo-usillo-rmp" class="section level4">
+<h4>Variable E: Velocidad del tornillo (usillo) [rmp]:</h4>
+<p>A mayor velocidad, menor porcentaje de defectos.</p>
+</div>
+<div id="variable-f-temperatura-del-barril-c" class="section level4">
+<h4>Variable F: Temperatura del Barril [°C]:</h4>
+<p>A mayor temperatura, menor porcentaje de defectos.</p>
+</div>
+</div>
+<div id="configuraciones-sugeridas-para-un-porcentaje-de-defectos-bajo" class="section level2">
+<h2>Configuraciones sugeridas para un Porcentaje de defectos bajo:</h2>
+<p>Después de realizar las pruebas y analizar el comportamiento del
+porcentaje de defectos con respecto a las demás variables, logramos
+predecir un porcentaje de defectos bajo. Esto lo logramos proponiendo
+valores para las máquinas que estuvieran dentro del rango de los datos
+dados por la empresa.</p>
+<pre class="r"><code>datos_nuevos &lt;- data.frame(A=68,B=239.2,C=249.3, D=186,E=151.2,F=178)
+predict(bestLm, datos_nuevos)</code></pre>
+<pre><code>##        1 
+## 3.029185</code></pre>
+<div id="configuraciones-usadas-para-porcentaje-de-defectos-de-3.03" class="section level3">
+<h3>Configuraciones usadas para Porcentaje de defectos de: 3.03%</h3>
+<ul>
+<li>Presión de la Bomba [Bar]: 68</li>
+<li>Temperatura del Plástico 3 (Bomba) [°C]: 239.2</li>
+<li>Temperatura del Plástico 4 (Mezcladora) [°C]: 249.3</li>
+<li>Temperatura tornillo (Usillo) [°C]: 186</li>
+<li>Velocidad del tornillo (usillo) [rmp]: 151.2 -Temperatura del Barril
+[°C]: 178</li>
+</ul>
+</div>
 </div>
 <div id="modelos-de-regresión-múltiple-por-cada-tipo-de-material" class="section level2">
 <h2>Modelos de regresión múltiple por cada tipo de material</h2>
