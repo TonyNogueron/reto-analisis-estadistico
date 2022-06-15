@@ -357,7 +357,7 @@ predict(bestLm, datos_nuevos)
 - Temperatura del Plástico 4 (Mezcladora) [°C]: 249.3
 - Temperatura tornillo (Usillo) [°C]: 186
 - Velocidad del tornillo (usillo) [rmp]: 151.2
- -Temperatura del Barril [°C]: 178
+- Temperatura del Barril [°C]: 178
 
 
 ## Modelos de regresión múltiple por cada tipo de material
