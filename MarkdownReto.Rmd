@@ -496,38 +496,123 @@ Analizando la gráfica podemos observar que los datos 91, 30, 40 y 13 tienen may
 
 # Análisis de serie de tiempo
 
-```{r}
-str(historico)
+Datos mensuales de las piezas defectuosas (2 años).
 
-productoA = ts(historico$`Producto A`, start = 1, frequency = 12)
-productoB = ts(historico$`Producto B`, start = 1, frequency = 12)
-productoC = ts(historico$`Producto C`, start = 1, frequency = 12)
-print(productoA)
-print(productoB)
-print(productoC)
-#boxplot(productoA~ cycle(productoA)) #  non-numeric argument to binary operator
-cycle(productoA)
-cycle(productoB)
-cycle(productoC)
+  | PRODUCTO | PIEZAS PRODUCIDAS AL MES |
+  | :----: | :----: |
+  |A| 300,000 |
+  |B| 40,000 |
+  |C| 200,000 |
+  
 
-#productoA.ts.desc = decompose(productoA)
-#productoB.ts.desc = decompose(productoB)
-#productoC.ts.desc = decompose(productoC)
+```{r include=FALSE}
+historicoA <- read_excel("Datos_Situacion_Problema.xlsx", 
+                                       sheet = "Producto A", col_types = c("numeric", 
+                                                                           "numeric", "numeric"), skip = 2)
 
+historicoB <- read_excel("Datos_Situacion_Problema.xlsx", 
+                         sheet = "Producto B", col_types = c("numeric", 
+                                                             "numeric", "numeric"), skip = 2)
+
+historicoC <- read_excel("Datos_Situacion_Problema.xlsx", 
+                         sheet = "Producto C", col_types = c("numeric", 
+                                                             "numeric", "numeric"), skip = 2)
+
+# convertimos data frame a serie de tiempo
+productoA = ts(historicoA$`defectuosas`, start = 1, frequency = 12); #plot(productoA)
+productoB = ts(historicoB$`defectuosas`, start = 1, frequency = 12); #productoB
+productoC = ts(historicoC$`defectuosas`, start = 1, frequency = 12); #productoC
 
 ```
 
+## Comparación de la distribución de los productos defectuosos cada mes
 
+```{r echo=FALSE}
+boxplot(productoA~ cycle(productoA),main="Producto A")
+boxplot(productoB~ cycle(productoA),main="Producto B")
+boxplot(productoC~ cycle(productoA),main="Producto C")
+#cycle(productoA)
+#cycle(productoB)
+#cycle(productoC)
+```
 
+## Descomposición de las series
 
+Donde:
+'trend' se calcula con una media móvil.
+'seasonal' se calcula promediando los valores de cada unidad de tiempo para todos los meses y centrando el resultado.
+'random' se obtiene restando a la serie observada las dos componentes anteriores.
 
+```{r}
+productoA.ts.desc = decompose(productoA); plot(productoA.ts.desc,xlab = "Año",main="Producto A")
 
+productoB.ts.desc = decompose(productoB); plot(productoB.ts.desc,xlab = "Año",main="Producto B")
 
+productoC.ts.desc = decompose(productoC); plot(productoC.ts.desc,xlab = "Año",main="Producto C")
+```
 
+### Gráficas desestacionadas
 
+Si eliminamos la componente estacional y dejamos la componente de tendencia y el ruidp, obtenemos:
 
+```{r}
 
+productoA.des = productoA-productoA.ts.desc$seasonal
+plot(productoA.des,main="Año",main="Producto A")
+productoB.des = productoB-productoB.ts.desc$seasonal
+plot(productoB.des,main="Año",main="Producto B")
+productoC.des = productoC-productoC.ts.desc$seasonal
+plot(productoC.des,main="Año",main="Producto C")
+```
 
+## Transformación de la serie original
 
+### 1. Estabilización de la varianza
 
+```{r}
+plot(log(productoA),main="Producto A")
+plot(log(productoB),main="Producto B")
+plot(log(productoC),main="Producto C")
+```
 
+### 2. Eliminación de tendencia
+
+Para esto diferenciamos la serie; o sea, consideramos la serie de diferencias entre una observación y la anterior en lugar de la serie original.
+
+```{r}
+x = log(productoA); difA.x = diff(x); plot(difA.x)
+x = log(productoB); difB.x = diff(x); plot(difB.x)
+x = log(productoC); difC.x = diff(x); plot(difC.x)
+```
+
+### 3. Eliminación de estacionalidad
+
+Para eliminar la estacionalidad de una serie mensual se pueden tomar diferencias estacionales de orden 12, como se muestra a continuación:
+
+```{r}
+difA2.difA.x = diff(difA.x,lag=12); plot(difA2.difA.x)
+difB2.difB.x = diff(difB.x,lag=12); plot(difB2.difB.x)
+difC2.difC.x = diff(difC.x,lag=12); plot(difC2.difC.x)
+```
+
+## Funciones de autocovarianzas y de autocorrelaciones
+
+Representación del correlograma de la serie:
+
+```{r}
+# FUNCIONES DE AUTOCOVARIANZAS Y DE AUTOCORRELACIONES
+yA = difA2.difA.x; acf(yA,main="Producto A")
+yB = difB2.difB.x; acf(yB,main="Producto B")
+yC = difC2.difC.x; acf(yC.main="Producto C")
+```
+
+Donde las líneas punteadas representan las bandas de confianza, bajo la hipótesis de que la serie es un ruido blanco(no correlacionada).
+
+### Valores numéricos de las correlaciones estimadas:
+
+```{r}
+# Valores numéricos
+acf(yA,plot=FALSE)$acf
+acf(yB,plot=FALSE)$acf
+acf(yC,plot=FALSE)$acf
+```
