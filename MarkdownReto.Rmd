@@ -428,16 +428,6 @@ ols_plot_cooksd_bar(bestLm)
 
 ```
 
-
-
-----------------------------------------------------------------------------
-# REVISAR!!!!!!
-
-
-
-
-
-
 # Multicolinealidad
 
 ```{r}
@@ -495,7 +485,7 @@ Analizando la gráfica podemos observar que los datos 91, 30, 40 y 13 tienen may
 
 
 
-# Análisis de serie de tiempo
+# ANÁLISIS DE SERIE DE TIEMPO
 
 Datos mensuales de las piezas defectuosas (2 años).
 
@@ -526,6 +516,12 @@ productoC = ts(historicoC$`defectuosas`, start = 1, frequency = 12); #productoC
 
 ```
 
+```{r}
+autoplot(productoA)+labs(title="Serie de tiempo Producto A")
+autoplot(productoB)+labs(title="Serie de tiempo Producto B")
+autoplot(productoC)+labs(title="Serie de tiempo Producto C")
+
+```
 ## Comparación de la distribución de los productos defectuosos cada mes
 
 ```{r echo=FALSE}
