@@ -428,42 +428,8 @@ ols_plot_cooksd_bar(bestLm)
 
 ```
 
-# Multicolinealidad
-
-```{r}
-rcorr(as.matrix(muestreo))
-```
-
-```{r}
-corrplot(cor(muestreo))
-```
-
-
-## Tolerancia  y Factor de Inflación de la Varianza del mejor modelo
-
-```{r}
-vif(bestLm)
-
-```
-
-```{r}
-tol <- 1/vif(bestLm)
-tol
-```
-
-Las covariables están relacionadas entre sí y su tolerancia no está debajo de 0.2 no indica que haya un problema serio.
-
-# Identificación de valores atípicos o influyentes en la regresión
-
-Análisis de las variables por separado.
-
-```{r}
-boxplot.matrix(as.matrix(muestreo),use.cols = T)
-```
-
-
 # Detección de influyentes
-*** revisar
+
 ```{r}
 i <- nrow(bestLm)
 abs(dfbeta(bestLm))>sqrt(2/i)
@@ -485,7 +451,7 @@ Analizando la gráfica podemos observar que los datos 91, 30, 40 y 13 tienen may
 
 
 
-# ANÁLISIS DE SERIE DE TIEMPO
+# Análisis de serie de tiempo
 
 Datos mensuales de las piezas defectuosas (2 años).
 
@@ -510,18 +476,20 @@ historicoC <- read_excel("Datos_Situacion_Problema.xlsx",
                                                              "numeric", "numeric"), skip = 2)
 
 # convertimos data frame a serie de tiempo
-productoA = ts(historicoA$`defectuosas`, start = 1, frequency = 12); #plot(productoA)
+productoA = ts(historicoA$`defectuosas`, start = 1, frequency = 12); productoA
 productoB = ts(historicoB$`defectuosas`, start = 1, frequency = 12); #productoB
 productoC = ts(historicoC$`defectuosas`, start = 1, frequency = 12); #productoC
 
 ```
 
+## Medias móviles
 ```{r}
-autoplot(productoA)+labs(title="Serie de tiempo Producto A")
-autoplot(productoB)+labs(title="Serie de tiempo Producto B")
-autoplot(productoC)+labs(title="Serie de tiempo Producto C")
+plot(productoA); pronos.productoA<-ma(productoA,order=2,centre=F); lines(pronos.productoA,col="red")
+plot(productoB); pronos.productoB<-ma(productoB,order=2,centre=F); lines(pronos.productoB,col="red")
+plot(productoC); pronos.productoC<-ma(productoC,order=2,centre=F); lines(pronos.productoC,col="red")
 
 ```
+
 ## Comparación de la distribución de los productos defectuosos cada mes
 
 ```{r echo=FALSE}
@@ -546,6 +514,14 @@ productoA.ts.desc = decompose(productoA); plot(productoA.ts.desc,xlab = "Año")
 productoB.ts.desc = decompose(productoB); plot(productoB.ts.desc,xlab = "Año")
 
 productoC.ts.desc = decompose(productoC); plot(productoC.ts.desc,xlab = "Año")
+```
+
+## Series de tiempo con su tendencia
+```{r}
+autoplot(productoA)+autolayer(trendcycle(productoA.ts.desc),series="Tendencia")+labs(title="Serie de tiempo Producto A")
+autoplot(productoB)+labs(title="Serie de tiempo Producto B")
+autoplot(productoC)+labs(title="Serie de tiempo Producto C")
+
 ```
 
 ### Gráficas desestacionadas
