@@ -22,6 +22,7 @@ library(olsrr)
 library(nortest)
 library(lmtest)
 library(broom)
+library(forecast)
 
 
 
@@ -544,11 +545,11 @@ Donde:
 'random' se obtiene restando a la serie observada las dos componentes anteriores.
 
 ```{r}
-productoA.ts.desc = decompose(productoA); plot(productoA.ts.desc,xlab = "Año",main="Producto A")
+productoA.ts.desc = decompose(productoA); plot(productoA.ts.desc,xlab = "Año")
 
-productoB.ts.desc = decompose(productoB); plot(productoB.ts.desc,xlab = "Año",main="Producto B")
+productoB.ts.desc = decompose(productoB); plot(productoB.ts.desc,xlab = "Año")
 
-productoC.ts.desc = decompose(productoC); plot(productoC.ts.desc,xlab = "Año",main="Producto C")
+productoC.ts.desc = decompose(productoC); plot(productoC.ts.desc,xlab = "Año")
 ```
 
 ### Gráficas desestacionadas
@@ -558,11 +559,11 @@ Si eliminamos la componente estacional y dejamos la componente de tendencia y el
 ```{r}
 
 productoA.des = productoA-productoA.ts.desc$seasonal
-plot(productoA.des,main="Año",main="Producto A")
+plot(productoA.des,main="Año Producto A")
 productoB.des = productoB-productoB.ts.desc$seasonal
-plot(productoB.des,main="Año",main="Producto B")
+plot(productoB.des,main="Año Producto B")
 productoC.des = productoC-productoC.ts.desc$seasonal
-plot(productoC.des,main="Año",main="Producto C")
+plot(productoC.des,main="Año Producto C")
 ```
 
 ## Transformación de la serie original
@@ -601,9 +602,9 @@ Representación del correlograma de la serie:
 
 ```{r}
 # FUNCIONES DE AUTOCOVARIANZAS Y DE AUTOCORRELACIONES
-yA = difA2.difA.x; acf(yA,main="Producto A")
-yB = difB2.difB.x; acf(yB,main="Producto B")
-yC = difC2.difC.x; acf(yC.main="Producto C")
+yA = difA2.difA.x; acf(yA)
+yB = difB2.difB.x; acf(yB)
+yC = difC2.difC.x; acf(yC)
 ```
 
 Donde las líneas punteadas representan las bandas de confianza, bajo la hipótesis de que la serie es un ruido blanco(no correlacionada).
@@ -616,3 +617,50 @@ acf(yA,plot=FALSE)$acf
 acf(yB,plot=FALSE)$acf
 acf(yC,plot=FALSE)$acf
 ```
+
+# PRONÓSTICO
+
+Para realizar un pronóstico, decidimos utilizar el modelo estadístico ARIMA. Al no contar con valores p, d,q utilizamos auto.arima(), que nos brinda el mejor modelo a utilizar.
+
+```{r}
+auto.arima(productoA,trace=T) # (0,0,0)
+auto.arima(productoB,trace=T) # (1,1,0)
+auto.arima(productoC,trace=T) # (1,0,0)
+```
+
+
+```{r}
+arimaA <- arima(productoA,order=c(0,0,0));
+arimaB <- arima(productoB,order=c(1,1,0)); 
+arimaC <- arima(productoC,order=c(1,0,0)); 
+```
+
+## Predicción
+
+```{r include=FALSE}
+productoA.forecast <- predict(arimaA,n.ahead=5); 
+
+productoB.forecast <- predict(arimaB,n.ahead=5); 
+
+productoC.forecast <- predict(arimaC,n.ahead=2);
+```
+
+
+## Suavizamiento y pronóstico
+
+```{r}
+library(smooth)
+pA.2 <- sma(productoA,order=4,h=4,silent=FALSE)
+pA <- forecast(pA.2); plot(pA,main="Producto A")
+
+pB.2 <- sma(productoB,order=4,h=4,silent=FALSE)
+pB <- forecast(pB.2); plot(pB,main="Producto B")
+
+pC.2 <- sma(productoC,order=4,h=4,silent=FALSE)
+pC <- forecast(pC.2); plot(pC,main="Producto C")
+```
+
+
+
+
+
